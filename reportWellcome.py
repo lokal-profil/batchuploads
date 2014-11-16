@@ -43,8 +43,6 @@ pywikibot.setAction("Update")
 page = pywikibot.Page(site, "Commons:Batch_uploading/Wellcome_Images/categories")
 page.put(table)
 
-sys.exit()
-
 cursor.execute("""SELECT DISTINCT rev_user_text, COUNT(page_title) AS edit_count FROM categorylinks
 RIGHT JOIN page ON cl_from = page_id 
 LEFT JOIN revision ON page_id = rev_page
