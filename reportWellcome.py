@@ -88,7 +88,7 @@ table = "<gallery>\n"+"\n".join(table) +"\n</gallery>"
 
 pywikibot.setAction("Update")
 page = pywikibot.Page(site, "Commons:Batch_uploading/Wellcome_Images/most_edited")
-page.put(table)
+page.put(table.decode('utf-8'))
 
 # Largest images list
 cursor.execute("""
