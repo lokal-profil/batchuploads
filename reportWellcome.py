@@ -13,10 +13,17 @@ import pywikibot
 import re
 import MySQLdb
 
-PROJECT = u'Wellcome Images'
-BASE_CAT = u'Files_from_Wellcome_Images'
-BAD_CATS = (u'Fæ', u'Files_from', u'CC-BY', u'Files_with', u'test_')
-TOP_PAGE = u'Commons:Batch_uploading/Wellcome_Images/'
+# Wellcome Images
+#PROJECT = u'Wellcome Images'
+#BASE_CAT = u'Files_from_Wellcome_Images'
+#BAD_CATS = (u'Fæ', u'Files_from', u'CC-BY', u'Files_with', u'test_')
+#TOP_PAGE = u'Commons:Batch_uploading/Wellcome_Images/'
+
+# LSH (COM:LSH)
+PROJECT = u'LSH Images'
+BASE_CAT = u'Images_from_Livrustkammaren_och_Skoklosters_slott_med_Stiftelsen_Hallwylska_museet'
+BAD_CATS = (u'Content_made', u'Images_from', u'CC-', u'PD-Sweden', u'Items_with', u'Media_contributed_by_LSH')
+TOP_PAGE = u'Commons:LSH/report/'
 
 conn = MySQLdb.connect(
     read_default_file = "~/replica.my.cnf",
@@ -126,8 +133,8 @@ from BeautifulSoup import BeautifulSoup
 #   Colours only on mac
 Red="\033[0;31m"     #Red
 Green="\033[0;32m"   #Green
-GreenB="\033[1;32m" #Green bold
-GreenU="\033[4;32m" #Green underlined
+GreenB="\033[1;32m"  #Green bold
+GreenU="\033[4;32m"  #Green underlined
 Yellow="\033[0;33m"  #Yellow
 Blue="\033[0;34m"    #Blue
 Purple="\033[0;35m"  #Purpley
@@ -147,7 +154,7 @@ def urltry(u, headers = { 'User-Agent' : 'Mozilla/5.0' } ):
         except:
             x=''
             countErr+=1
-            if countErr>300: countErr=300   # 5 minutes between read attempts, eventually
+            if countErr>300: countErr=300  # 5 minutes between read attempts, eventually
             print Cyan,'** ERROR',countErr,'\n ** Failed to read from '+Yellow+u+Cyan+'\n ** Pause for '+str(countErr*1)+' seconds and try again ['+time.strftime("%H:%M:%S")+']',White
             time.sleep(1*countErr)
     return x
