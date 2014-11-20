@@ -22,8 +22,8 @@ import MySQLdb
 # LSH (COM:LSH)
 PROJECT = u'LSH Images'
 BASE_CAT = u'Images_from_Livrustkammaren_och_Skoklosters_slott_med_Stiftelsen_Hallwylska_museet'
-BAD_CATS = (u'Content_made', u'Images_from', u'CC-', u'PD-Sweden', u'Items_with', u'Media_contributed_by_LSH')
-TOP_PAGE = u'Commons:LSH/report/'
+BAD_CATS = (u'Content_made', u'Images_from', u'CC-', u'PD-Sweden', u'Items_with', u'Media_contributed_by_LSH', u'Author_died')
+TOP_PAGE = u'Commons:LSH/reports/'
 
 conn = MySQLdb.connect(
     read_default_file = "~/replica.my.cnf",
