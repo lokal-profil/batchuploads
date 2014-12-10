@@ -260,9 +260,9 @@ def get_projects():
 						else:
 								recursive=2
 				for row in p.split('\n')[2:]:
-						if row.lower().startswith('badcats: '):
+						if row.lower().startswith('** badcats: '):
 								pywikibot.output(row)
-								badcats = row[len('badcats: '):].strip().split('|')
+								badcats = row[len('** badcats: '):].strip().split('|')
 				projects.append([cat, rep, recursive, badcats])
 		return projects
 
