@@ -22,7 +22,7 @@ project.
 # import urllib
 import pywikibot, re
 from pywikibot import pagegenerators
-from pywikibot.compat import catlib 
+from pywikibot.compat import catlib
 import MySQLdb
 
 REQUEST_PAGE = 'User:Faebot/GLAM dashboard'
@@ -63,7 +63,7 @@ LIMIT 10;
 		for page, link in cursor.fetchall():
 				gallery.append("File:"+page +"|<center>[[:"+ re.sub('_',' ',re.sub('data:','wikidata:', link)) +"]]</center>")
 		report = "Ten randomly selected files with a single mainspace use on Wikimedia projects:\n<gallery>\n"+"\n".join(gallery)+"\n</gallery>"
-		print "Working out mincat"
+		pywikibot.output("Working out mincat")
 		cursor.execute("""
 				SELECT COUNT(c4.cl_to)
 				FROM page p2
@@ -163,15 +163,15 @@ def volunteers(cat_list):
 		result = "{| class='wikitable sortable'\n!Edits!!#!!Volunteers"
 		r = [u[1] for u in table if u[0]>999]
 		if len(r)>0:
-				result+= "\n|-\n|1000+||" + str(len(r)) +"||"+"{{middot}}".join(r)
+				result += "\n|-\n|1000+||" + str(len(r)) +"||"+"{{middot}}".join(r)
 		r = [u[1] for u in table if u[0]>99 and u[0]<1000]
 		if len(r)>0:
-				result+= "\n|-\n|100+ ||" + str(len(r)) +"||"+"{{middot}}".join(r)
+				result += "\n|-\n|100+ ||" + str(len(r)) +"||"+"{{middot}}".join(r)
 		r = [u[1] for u in table if u[0]>9 and u[0]<100]
-		result+= "\n|-\n|10+  ||" + str(len(r)) +"||"+"{{middot}}".join(r)
+		result += "\n|-\n|10+  ||" + str(len(r)) +"||"+"{{middot}}".join(r)
 		r = [u[1] for u in table if u[0]<10]
-		result+= "\n|-\n|     ||" + str(len(r)) +"||"+"{{middot}}".join(r)
-		result+= "\n|}"
+		result += "\n|-\n|     ||" + str(len(r)) +"||"+"{{middot}}".join(r)
+		result += "\n|}"
 
 		return result
 '''
@@ -189,7 +189,7 @@ ORDER BY 2 DESC;
 '''
 
 def glamorous_list(cat_list):
-		query="""
+		query = """
 SELECT
 	page_title,
 	count(gil_page_title) AS gilcount,
@@ -201,10 +201,10 @@ GROUP BY page_title
 ORDER BY gilcount DESC
 LIMIT 24;"""
 		cursor.execute(query)
-		gallery="<gallery>\n"
+		gallery = "<gallery>\n"
 		for title, gilcount, concat in cursor.fetchall():
-				gallery+= 'File:'+title +'|<abbr title="'+ concat + '">'+ str(gilcount) +'</abbr>\n'
-		gallery+='</gallery>'
+				gallery += 'File:'+title +'|<abbr title="'+ concat + '">'+ str(gilcount) +'</abbr>\n'
+		gallery += '</gallery>'
 		return gallery
 
 def popular_categories(cat_list, badcats):
@@ -225,15 +225,14 @@ HAVING total>1
 ORDER BY COUNT(page_id) DESC
 LIMIT 100;
 """
-		pywikibot.output(query)
 		cursor.execute(query)
 		table = "{{flatlist|"
 		for cat, total in cursor.fetchall():
-				table+="\n*[[:Category:"+re.sub("_"," ",cat)+"|]]"+" ({:,})".format(total)
-		table+="\n}}"
+				table += "\n*[[:Category:"+re.sub("_"," ",cat)+"|]]"+" ({:,})".format(total)
+		table += "\n}}"
 		return table
 
-def child_catcher(category, recursive): # From seed category return children list to 2 levels
+def child_catcher(category, recursive):  # From seed category return children list to 2 levels
 		cat = catlib.Category(site, category)
 		gen = pagegenerators.SubCategoriesPageGenerator(cat, recurse=recursive)
 		children = []
@@ -261,14 +260,13 @@ def get_projects():
 								recursive=2
 				for row in p.split('\n')[2:]:
 						if row.lower().startswith('** badcats: '):
-								pywikibot.output(row)
-								badcats = row[len('** badcats: '):].strip().split('|')
+								badcats = row[len('** badcats: '):].strip().replace(' ','_').split('|')
 				projects.append([cat, rep, recursive, badcats])
 		return projects
 
 def index(bpage):
 		bpage = re.sub("_", " ", bpage)
-		text=""
+		text = ""
 		# Ensure any new reports are added here
 		for sub in ["popular categories", "wikimedia usage", "volunteers", "most edited", "largest", "improvement"]:
 				text += "* [[:" + bpage + "/" + sub + "|" + sub[0:1].upper() + sub[1:] + "]]\n"
@@ -279,7 +277,7 @@ def put_report(report, spage, action):
 		page = pywikibot.Page(site, spage)
 		try:
 				html = page.get()
-				if len(html)==len(report):	# There may be some real changes lost, but most of non-length changes are trivial shuffling
+				if len(html) == len(report):  # There may be some real changes lost, but most of non-length changes are trivial shuffling
 						return
 		except:
 				pass
