@@ -257,8 +257,8 @@ def get_projects():
 						else:
 								recursive=2
                 for row in p.split('\n')[2:]:
-                    if row.lower().startswith('badcats'):
-                        badcats = row.split('|')
+                    if row.lower().startswith('badcats '):
+                        badcats = row[len('badcats '):].strip().split('|')
 				projects.append([cat, rep, recursive, badcats])
 		return projects
 
