@@ -25,7 +25,7 @@ import MySQLdb
 
 REQUEST_PAGE = 'User:Faebot/GLAM dashboard'
 USUAL_BADCATS = ["Files_from",
-                 "CC-BY",
+                 "CC-",
                  "Files_with",
                  "test_",
                  "Uploaded_with",
@@ -207,10 +207,10 @@ LIMIT 24;"""
 
 def popular_categories(cat_list, badcats):
 		if badcats and len(badcats) > 0:
-            badcats += USUAL_BADCATS
+				badcats += USUAL_BADCATS
 		else:
-            badcats = USUAL_BADCATS
-        badcats = '|'.join(list(set(badcats)))  # also gets rid of duplicates
+				badcats = USUAL_BADCATS
+		badcats = '|'.join(list(set(badcats)))  # also gets rid of duplicates
 		query="""
 SELECT c.cl_to AS category,
 COUNT(DISTINCT page_id) AS total
@@ -249,16 +249,16 @@ def get_projects():
 				rep = re.sub('^[ \*]*|\[\[:?|\|.*|\]\]', '', p.split('\n')[1])
 				if cat[:3]!='Cat': continue
 				recursive=0
-                badcats = None
+				badcats = None
 				if re.search(r"[Rr]ecursive", " ".join(p.split('\n')[2:])):
 						if re.search(r"[Rr]ecursive \d", " ".join(p.split('\n')[2:])):
 								recursive=int(float(re.findall(r"[Rr]ecursive (\d)", " ".join(p.split('\n')[2:]))[0]))
 								if recursive>6: recursive=6
 						else:
 								recursive=2
-                for row in p.split('\n')[2:]:
-                    if row.lower().startswith('badcats '):
-                        badcats = row[len('badcats '):].strip().split('|')
+				for row in p.split('\n')[2:]:
+						if row.lower().startswith('badcats '):
+								badcats = row[len('badcats '):].strip().split('|')
 				projects.append([cat, rep, recursive, badcats])
 		return projects
 
