@@ -19,8 +19,10 @@ from any organization and should not be claimed to be part of any sponsored
 project.
 '''
 
-import urllib
-import pywikibot, re, catlib, pagegenerators
+# import urllib
+import pywikibot, re
+from pywikibot import pagegenerators
+from pywikibot.compat import catlib 
 import MySQLdb
 
 REQUEST_PAGE = 'User:Faebot/GLAM dashboard'
@@ -74,7 +76,7 @@ LIMIT 10;
 				LIMIT 1;""")
 		for c in cursor.fetchall():
 				mincats = c[0]
-		#print "*** mincats is", int(float(mincats))
+		# print "*** mincats is", int(float(mincats))
 		mincats = int(float(mincats))
 		cursor.execute("""
 SELECT p1.page_title, page_id
@@ -223,6 +225,7 @@ HAVING total>1
 ORDER BY COUNT(page_id) DESC
 LIMIT 100;
 """
+		pywikibot.output(query)
 		cursor.execute(query)
 		table = "{{flatlist|"
 		for cat, total in cursor.fetchall():
@@ -244,7 +247,7 @@ def get_projects():
 		source = source.split('\n==Requests==')[1].split('\n==')[0]
 		projects = []
 		for p in re.split(r'\n\*[^\*]', source):
-				#if re.search('EAGLE', p): continue # DEBUG
+				# if re.search('EAGLE', p): continue # DEBUG
 				cat = re.sub('\[\[:?|\|.*|\]\]', '', p.split('\n')[0])
 				rep = re.sub('^[ \*]*|\[\[:?|\|.*|\]\]', '', p.split('\n')[1])
 				if cat[:3]!='Cat': continue
@@ -257,8 +260,9 @@ def get_projects():
 						else:
 								recursive=2
 				for row in p.split('\n')[2:]:
-						if row.lower().startswith('badcats '):
-								badcats = row[len('badcats '):].strip().split('|')
+						if row.lower().startswith('badcats: '):
+								pywikibot.output(row)
+								badcats = row[len('badcats: '):].strip().split('|')
 				projects.append([cat, rep, recursive, badcats])
 		return projects
 
@@ -279,8 +283,7 @@ def put_report(report, spage, action):
 						return
 		except:
 				pass
-		pywikibot.setAction(action)
-		page.put(report)
+		page.put(report, comment=action)
 		return
 
 def main():
@@ -311,5 +314,5 @@ def main():
 
 if __name__ == "__main__":
 		usage = u'Usage:\tAsk Fae'
-		site = pywikibot.getSite('commons', 'commons')
+		site = pywikibot.Site('commons', 'commons')
 		main()
