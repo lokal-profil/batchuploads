@@ -23,6 +23,22 @@ import urllib
 import pywikibot, re, catlib, pagegenerators
 import MySQLdb
 
+REQUEST_PAGE = 'User:Faebot/GLAM dashboard'
+USUAL_BADCATS = ["Files_from",
+                 "CC-BY",
+                 "Files_with",
+                 "test_",
+                 "Uploaded_with",
+                 "Self-pub",
+                 "Items_with_OTRS",
+                 "GFDL",
+                 "FAL",
+                 "PD-",
+                 "uploaded_by_",
+                 "Flickr_images_reviewed",
+                 "Flickr_images_uploaded"
+                 ]
+
 def improvement(cat_list):
 		cursor.execute("""
 SELECT
@@ -65,7 +81,7 @@ SELECT p1.page_title, page_id
 FROM page p1
 JOIN categorylinks c1 ON p1.page_id=c1.cl_from
 JOIN categorylinks c2 ON p1.page_id=c2.cl_from
-WHERE 
+WHERE
 c1.cl_to IN (""" + cat_list + """)
 AND page_namespace=6
 GROUP BY p1.page_title
@@ -85,11 +101,11 @@ def most_edited(cat_list):
 			AND page_namespace=6
 		ORDER BY (SELECT COUNT(rev_timestamp) FROM revision WHERE page_id=rev_page) DESC
 		LIMIT 24;""")
-		
+
 		table = []
 		for page_title, edits in cursor.fetchall():
 			table.append("File:"+page_title+"|<center>"+ str(edits) +" edits</center>")
-		
+
 		table = "<gallery>\n"+"\n".join(table) +"\n</gallery>"
 		return table
 
@@ -105,13 +121,13 @@ def largest(cat_list):
 				 ORDER BY img_width*img_height DESC
 				 LIMIT 24;
 		""")
-		
+
 		table = []
 		for File, Size in cursor.fetchall():
 			table.append(File+"|<center>"+Size+"</center>")
 		table="<gallery>\n"+"\n".join(table)+"\n</gallery>"
 		return table
-		
+
 '''
 SELECT CONCAT("File:",img_name) AS File,
 CONCAT( ROUND(img_width*img_height/1000000), " MP<br><small>", img_width, "x", img_height, " pixels</small>" ) AS Size
@@ -128,20 +144,20 @@ def volunteers(cat_list):
 		SELECT DISTINCT rev_user_text,
 			COUNT(page_title) AS edit_count
 		FROM categorylinks
-		RIGHT JOIN page ON cl_from = page_id 
+		RIGHT JOIN page ON cl_from = page_id
 		LEFT JOIN revision ON page_id = rev_page
 		WHERE page_namespace=6
 			AND cl_to IN (""" + cat_list + """)
 			AND rev_user_text NOT REGEXP '[Bb]ot'
 		GROUP BY 1
-		HAVING edit_count>0 
+		HAVING edit_count>0
 		ORDER BY 2 DESC;"""
 		)
-		
+
 		table = []
 		for userx, count in cursor.fetchall():
 				table.append([count, "<abbr title='{} edits'>[[User talk:".format(count) + userx + "|" +userx +"]]</abbr>"])
-		
+
 		result = "{| class='wikitable sortable'\n!Edits!!#!!Volunteers"
 		r = [u[1] for u in table if u[0]>999]
 		if len(r)>0:
@@ -154,19 +170,19 @@ def volunteers(cat_list):
 		r = [u[1] for u in table if u[0]<10]
 		result+= "\n|-\n|     ||" + str(len(r)) +"||"+"{{middot}}".join(r)
 		result+= "\n|}"
-		
+
 		return result
 '''
 SELECT DISTINCT rev_user_text,
 COUNT(page_title) AS edit_count
 FROM categorylinks
-RIGHT JOIN page ON cl_from = page_id 
+RIGHT JOIN page ON cl_from = page_id
 LEFT JOIN revision ON page_id = rev_page
 WHERE page_namespace=6
 AND cl_to IN ('Media_contributed_by_Zentralbibliothek_Solothurn')
 AND rev_user_text NOT REGEXP '[Bb]ot'
 GROUP BY 1
-HAVING edit_count>0 
+HAVING edit_count>0
 ORDER BY 2 DESC;
 '''
 
@@ -189,14 +205,19 @@ LIMIT 24;"""
 		gallery+='</gallery>'
 		return gallery
 
-def popular_categories(cat_list):
+def popular_categories(cat_list, badcats):
+		if badcats and len(badcats) > 0:
+            badcats += USUAL_BADCATS
+		else:
+            badcats = USUAL_BADCATS
+        badcats = '|'.join(list(set(badcats)))  # also gets rid of duplicates
 		query="""
 SELECT c.cl_to AS category,
 COUNT(DISTINCT page_id) AS total
 FROM page
 INNER JOIN categorylinks AS c ON page_id=c.cl_from AND c.cl_to NOT IN (""" + cat_list +""")
 INNER JOIN categorylinks AS cc on page_id=cc.cl_from AND cc.cl_to IN ("""+ cat_list +""")
-WHERE c.cl_to NOT REGEXP "Files_from|CC-BY|Files_with|test_|Uploaded_with|Self-pub|Items_with_OTRS|GFDL|FAL|PD-|uploaded_by_|Flickr_images_reviewed|Flickr_images_uploaded"
+WHERE c.cl_to NOT REGEXP \"""" + badcats + """\"
 GROUP BY c.cl_to
 HAVING total>1
 ORDER BY COUNT(page_id) DESC
@@ -219,7 +240,7 @@ def child_catcher(category, recursive): # From seed category return children lis
 		return children
 
 def get_projects():
-		source = pywikibot.Page(site, 'User:Faebot/GLAM dashboard').get()
+		source = pywikibot.Page(site, REQUEST_PAGE).get()
 		source = source.split('\n==Requests==')[1].split('\n==')[0]
 		projects = []
 		for p in re.split(r'\n\*[^\*]', source):
@@ -228,13 +249,17 @@ def get_projects():
 				rep = re.sub('^[ \*]*|\[\[:?|\|.*|\]\]', '', p.split('\n')[1])
 				if cat[:3]!='Cat': continue
 				recursive=0
+                badcats = None
 				if re.search(r"[Rr]ecursive", " ".join(p.split('\n')[2:])):
 						if re.search(r"[Rr]ecursive \d", " ".join(p.split('\n')[2:])):
 								recursive=int(float(re.findall(r"[Rr]ecursive (\d)", " ".join(p.split('\n')[2:]))[0]))
 								if recursive>6: recursive=6
 						else:
 								recursive=2
-				projects.append([cat, rep, recursive])
+                for row in p.split('\n')[2:]:
+                    if row.lower().startswith('badcats'):
+                        badcats = row.split('|')
+				projects.append([cat, rep, recursive, badcats])
 		return projects
 
 def index(bpage):
@@ -276,7 +301,7 @@ def main():
 		for project in projects:
 				cscats = ('"' + '","'.join([re.sub(" ","_",c[9:]) for c in project[0]]) + '"').encode('utf-8')
 				put_report(improvement(cscats), project[1] + "/improvement", "GLAM dashboard improvement suggestions")
-				put_report(popular_categories(cscats), project[1] + "/popular_categories", "GLAM dashboard update popular categories")
+				put_report(popular_categories(cscats, project[3]), project[1] + "/popular_categories", "GLAM dashboard update popular categories")
 				put_report(glamorous_list(cscats), project[1] + "/wikimedia_usage", "GLAM dashboard update usage")
 				put_report(volunteers(cscats), project[1] + "/volunteers", "GLAM dashboard update volunteer list")
 				put_report(most_edited(cscats), project[1] + "/most_edited", "GLAM dashboard update most edited")
