@@ -306,7 +306,7 @@ def main():
 				read_default_file = "~/replica.my.cnf",
 				host = "commonswiki.labsdb",
 				db = "commonswiki_p",
-                charset = 'utf8'
+				charset = 'utf8'
 				)
 		global cursor
 		cursor = conn.cursor()
